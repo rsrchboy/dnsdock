@@ -2,17 +2,18 @@
 # MIT
 #
 # Copyright (C) 2014 Tõnis Tiigi <tonistiigi@gmail.com>
-# 
+# Copyright (C) 2017 Julian Xhokaxhiu <info@julianxhokaxhiu.com>
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,65 +22,35 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-{{$GOLANG_VERSION := "1.6.3"}}
-{{$ARCH:= (or .ARCH "amd64")}}
-{{$GIT_COMMIT:= (or .GIT_COMMIT "develop")}}
-{{$DOCKERIMAGE_VERSION:= (or .DOCKERIMAGE_VERSION "dev")}}
-{{$SRC_DIR:= (or .SRC_DIR ".")}}
-
 # build image
-FROM alpine:3.4
-RUN apk update
-RUN apk upgrade
-RUN apk add go>{{$GOLANG_VERSION}} go-tools>{{$GOLANG_VERSION}} git musl-dev
+FROM golang:alpine
 
-ENV GOPATH=/go
-ENV PATH=${PATH}:/go/bin
 ENV CGO_ENABLED=0
+ENV GOARCH=amd64
 
+RUN apk update && apk add git
 RUN go get -v github.com/tools/godep
 RUN go get -u github.com/golang/lint/golint
 RUN go get github.com/ahmetb/govvv
 
 RUN mkdir -p /go/src/github.com/aacebedo/dnsdock
 WORKDIR /go/src/github.com/aacebedo/dnsdock
-{{if .SRC_DIR}}
-  MOUNT {{$SRC_DIR}}:/go/src/github.com/aacebedo/dnsdock
-{{else}}
-  RUN git clone https://github.com/aacebedo/dnsdock /go/src/github.com/aacebedo/dnsdock 
-  RUN git checkout {{$GIT_COMMIT}}
-{{end}}
+ADD . /go/src/github.com/aacebedo/dnsdock
 
-{{if .OUTPUT_DIR}}
-  MOUNT {{.OUTPUT_DIR}}:/tmp/output
-{{else}}
-  RUN mkdir /tmp/output
-{{end}}
-
-WORKDIR /go/src/github.com/aacebedo/dnsdock
+RUN mkdir /tmp/output
 RUN godep restore
-ENV GOARCH={{$ARCH}}
 WORKDIR /go/src/github.com/aacebedo/dnsdock/src
-ATTACH sh
+
 RUN govvv build -o /tmp/output/dnsdock
 RUN golint -set_exit_status
-{{if eq $ARCH "amd64"}}
+
+# AMD64
 RUN go vet
 RUN go test ./...
-{{end}}
-TAG aacebedo/dnsdock-devenv:latest-{{$ARCH}}
-EXPORT /tmp/output/dnsdock ./dnsdock
+
+# -----------------
 
 # run image
-{{if eq $ARCH "amd64"}}
 FROM alpine
-{{else}}
-FROM easypi/alpine-arm
-{{end}}
-IMPORT ./dnsdock /bin/dnsdock
+COPY --from=0 /tmp/output/dnsdock /bin/dnsdock
 ENTRYPOINT ["dnsdock"]
-TAG aacebedo/dnsdock:{{$DOCKERIMAGE_VERSION}}-{{$ARCH}}
-
-{{if ne $DOCKERIMAGE_VERSION "dev"}}
-TAG aacebedo/dnsdock:latest-{{$ARCH}}
-{{end}}
