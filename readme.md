@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/aacebedo/dnsdock.png)](http://travis-ci.org/aacebedo/dnsdock)
+[![Docker Automated buil](https://img.shields.io/docker/automated/julianxhokaxhiu/dnsdock.svg)](https://hub.docker.com/r/julianxhokaxhiu/dnsdock) [![Docker Build Statu](https://img.shields.io/docker/build/julianxhokaxhiu/dnsdock.svg)](https://hub.docker.com/r/julianxhokaxhiu/dnsdock)
 
 
 ## dnsdock
