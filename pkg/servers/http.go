@@ -10,6 +10,7 @@ package servers
 
 import (
 	"encoding/json"
+	"github.com/coreos/go-systemd/activation"
 	"github.com/gorilla/mux"
 	"github.com/kshlm/dnsdock/pkg/utils"
 	"net/http"
@@ -45,6 +46,9 @@ func NewHTTPServer(c *utils.Config, list ServiceListProvider) *HTTPServer {
 
 // Start starts the http endpoint
 func (s *HTTPServer) Start() error {
+	if l, err := activation.Listeners(); err == nil && len(l) == 1 {
+		return s.server.Serve(l[0])
+	}
 	return s.server.ListenAndServe()
 }
 

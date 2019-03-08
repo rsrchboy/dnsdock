@@ -11,6 +11,7 @@ package servers
 import (
 	"errors"
 	"fmt"
+	"github.com/coreos/go-systemd/activation"
 	"github.com/kshlm/dnsdock/pkg/utils"
 	"github.com/miekg/dns"
 	"net"
@@ -76,11 +77,18 @@ func NewDNSServer(c *utils.Config) *DNSServer {
 
 	s.server = &dns.Server{Addr: c.DnsAddr, Net: "udp", Handler: s.mux}
 
+	if pc, err := activation.PacketConns(); err == nil && len(pc) == 1 {
+		s.server.PacketConn = pc[0]
+	}
+
 	return s
 }
 
 // Start starts the DNSServer
 func (s *DNSServer) Start() error {
+	if s.server.PacketConn != nil {
+		return s.server.ActivateAndServe()
+	}
 	return s.server.ListenAndServe()
 }
 
