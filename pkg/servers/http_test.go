@@ -9,7 +9,7 @@
 package servers
 
 import (
-	"github.com/aacebedo/dnsdock/src/utils"
+	"github.com/kshlm/dnsdock/pkg/utils"
 	"io/ioutil"
 	"net/http"
 	"strings"

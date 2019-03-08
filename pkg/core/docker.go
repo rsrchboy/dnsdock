@@ -11,11 +11,11 @@ package core
 import (
 	"crypto/tls"
 	"errors"
-	"github.com/aacebedo/dnsdock/src/servers"
-	"github.com/aacebedo/dnsdock/src/utils"
 	"github.com/docker/engine-api/client"
 	"github.com/docker/engine-api/types"
 	eventtypes "github.com/docker/engine-api/types/events"
+	"github.com/kshlm/dnsdock/pkg/servers"
+	"github.com/kshlm/dnsdock/pkg/utils"
 	"github.com/vdemeester/docker-events"
 	"golang.org/x/net/context"
 	"net"
