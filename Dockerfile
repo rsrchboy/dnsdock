@@ -28,29 +28,16 @@ FROM golang:alpine
 ENV CGO_ENABLED=0
 ENV GOARCH=amd64
 
-RUN apk update && apk add git
-RUN go get -v github.com/tools/godep
-RUN go get -u github.com/golang/lint/golint
-RUN go get github.com/ahmetb/govvv
-
-RUN mkdir -p /go/src/github.com/aacebedo/dnsdock
-WORKDIR /go/src/github.com/aacebedo/dnsdock
-ADD . /go/src/github.com/aacebedo/dnsdock
-
-RUN mkdir /tmp/output
-RUN godep restore
-WORKDIR /go/src/github.com/aacebedo/dnsdock/src
-
-RUN govvv build -o /tmp/output/dnsdock
-RUN golint -set_exit_status
-
-# AMD64
-RUN go vet
-RUN go test ./...
+RUN mkdir dnsdock
+WORKDIR ./dnsdock
+ADD . .
 
 # -----------------
 
+RUN go build .
+RUN go test
+
 # run image
 FROM alpine
-COPY --from=0 /tmp/output/dnsdock /bin/dnsdock
+COPY --from=0 /go/dnsdock/dnsdock /bin/dnsdock
 ENTRYPOINT ["dnsdock"]
