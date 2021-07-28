@@ -139,7 +139,6 @@ func (d *DockerManager) getService(id string) (*servers.Service, error) {
 
 	service = getIPAddresses(service, &desc)
 	service = overrideFromLabels(service, desc.Config.Labels)
-	service = overrideFromEnv(service, splitEnv(desc.Config.Env))
 	if service == nil {
 		return nil, errors.New("Skipping " + id)
 	}
@@ -224,19 +223,6 @@ func cleanContainerName(name string) string {
 	return strings.Replace(name, "/", "", -1)
 }
 
-func splitEnv(in []string) (out map[string]string) {
-	out = make(map[string]string, len(in))
-	for _, exp := range in {
-		parts := strings.SplitN(exp, "=", 2)
-		var value string
-		if len(parts) > 1 {
-			value = strings.Trim(parts[1], " ") // trim just in case
-		}
-		out[strings.Trim(parts[0], " ")] = value
-	}
-	return
-}
-
 func overrideFromLabels(in *servers.Service, labels map[string]string) (out *servers.Service) {
 	var region string
 	for k, v := range labels {
@@ -291,72 +277,6 @@ func overrideFromLabels(in *servers.Service, labels map[string]string) (out *ser
 			}
 			if len(addrs) == 0 {
 				logger.Warningf("The prefix '%s' didn't match any IP addresses of service '%s', the service will be ignored", v, in.Name)
-			}
-			in.IPs = addrs
-		}
-	}
-
-	if len(region) > 0 {
-		in.Image = in.Image + "." + region
-	}
-	out = in
-	return
-}
-
-func overrideFromEnv(in *servers.Service, env map[string]string) (out *servers.Service) {
-	var region string
-	for k, v := range env {
-		if k == "DNSDOCK_IGNORE" || k == "SERVICE_IGNORE" {
-			return nil
-		}
-
-		if k == "DNSDOCK_ALIAS" {
-			in.Aliases = strings.Split(v, ",")
-		}
-
-		if k == "DNSDOCK_NAME" {
-			in.Name = v
-		}
-
-		if k == "SERVICE_TAGS" {
-			if len(v) == 0 {
-				in.Name = ""
-			} else {
-				in.Name = strings.Split(v, ",")[0]
-			}
-		}
-
-		if k == "DNSDOCK_IMAGE" || k == "SERVICE_NAME" {
-			in.Image = v
-		}
-
-		if k == "DNSDOCK_TTL" {
-			if ttl, err := strconv.Atoi(v); err == nil {
-				in.TTL = ttl
-			}
-		}
-
-		if k == "SERVICE_REGION" {
-			region = v
-		}
-
-		if k == "DNSDOCK_IPADDRESS" {
-			ipAddr := net.ParseIP(v)
-			if ipAddr != nil {
-				in.IPs = in.IPs[:0]
-				in.IPs = append(in.IPs, ipAddr)
-			}
-		}
-
-		if k == "DNSDOCK_PREFIX" {
-			addrs := make([]net.IP, 0)
-			for _, value := range in.IPs {
-				if strings.HasPrefix(value.String(), v) {
-					addrs = append(addrs, value)
-				}
-			}
-			if len(addrs) == 0 {
-				logger.Warningf("The prefix '%s' didn't match any IP address of  service '%s', the service will be ignored", v, in.Name)
 			}
 			in.IPs = addrs
 		}
