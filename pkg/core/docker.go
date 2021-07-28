@@ -137,18 +137,7 @@ func (d *DockerManager) getService(id string) (*servers.Service, error) {
 	}
 	service.Name = cleanContainerName(desc.Name)
 
-	switch len(desc.NetworkSettings.Networks) {
-	case 0:
-		logger.Warningf("Warning, no IP address found for container '%s' ", desc.Name)
-	default:
-		for _, value := range desc.NetworkSettings.Networks {
-			ip := net.ParseIP(value.IPAddress)
-			if ip != nil {
-				service.IPs = append(service.IPs, ip)
-			}
-		}
-	}
-
+	service = getIPAddresses(service, &desc)
 	service = overrideFromLabels(service, desc.Config.Labels)
 	service = overrideFromEnv(service, splitEnv(desc.Config.Env))
 	if service == nil {
@@ -159,6 +148,53 @@ func (d *DockerManager) getService(id string) (*servers.Service, error) {
 		service.Aliases = append(service.Aliases, service.Name)
 	}
 	return service, nil
+}
+
+func getIPAddresses(in *servers.Service, desc *types.ContainerJSON) *servers.Service {
+
+	// first, handle the easy cases
+	switch len(desc.NetworkSettings.Networks) {
+	case 0:
+		logger.Warningf("no networks found for container '%s' ", desc.Name)
+		return in
+	case 1:
+		for _, value := range desc.NetworkSettings.Networks {
+			appendIPAddressFromNetwork(in, value.IPAddress)
+		}
+		return in
+	}
+
+	// then, check to see if we have something more interesting to offer
+
+	// note, we're not doing this in the overrides-from-labels function, as
+	// that one is structured such that anything coming in via a label is
+	// plunked in directly, not used to refine what information is being used
+
+	if networkName, ok := desc.Config.Labels["com.dnsdock.network"]; ok {
+		logger.Debugf("container '%s' requests we use address from network: %s", desc.Name, networkName)
+		if net, ok := desc.NetworkSettings.Networks[networkName]; ok {
+			appendIPAddressFromNetwork(in, net.IPAddress)
+			return in
+		}
+		// if we're here, network doesn't exist
+		logger.Errorf("container '%s' has no such network attached: %s", desc.Name, networkName)
+		return in
+	}
+
+	logger.Warningf("container '%s' does not specify a network and has multiple networks attached", desc.Name)
+	for _, value := range desc.NetworkSettings.Networks {
+		appendIPAddressFromNetwork(in, value.IPAddress)
+	}
+
+	return in
+}
+
+func appendIPAddressFromNetwork(svc *servers.Service, raw string) {
+	ip := net.ParseIP(raw)
+	if ip != nil {
+		svc.IPs = append(svc.IPs, ip)
+	}
+	return
 }
 
 func getImageName(tag string) string {
