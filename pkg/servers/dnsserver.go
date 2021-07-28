@@ -12,7 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/coreos/go-systemd/activation"
-	"github.com/kshlm/dnsdock/pkg/utils"
+	"github.com/rsrchboy/dnsdock/pkg/utils"
 	"github.com/miekg/dns"
 	"net"
 	"regexp"

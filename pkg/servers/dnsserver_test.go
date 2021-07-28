@@ -9,7 +9,7 @@
 package servers
 
 import (
-	"github.com/kshlm/dnsdock/pkg/utils"
+	"github.com/rsrchboy/dnsdock/pkg/utils"
 	"github.com/miekg/dns"
 	"net"
 	"strings"

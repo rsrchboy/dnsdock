@@ -9,7 +9,7 @@
 package core
 
 import (
-	"github.com/kshlm/dnsdock/pkg/servers"
+	"github.com/rsrchboy/dnsdock/pkg/servers"
 	"reflect"
 	"testing"
 )

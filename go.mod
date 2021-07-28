@@ -1,4 +1,4 @@
-module github.com/kshlm/dnsdock
+module github.com/rsrchboy/dnsdock
 
 go 1.12
 

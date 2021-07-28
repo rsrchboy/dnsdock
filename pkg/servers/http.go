@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 	"github.com/coreos/go-systemd/activation"
 	"github.com/gorilla/mux"
-	"github.com/kshlm/dnsdock/pkg/utils"
+	"github.com/rsrchboy/dnsdock/pkg/utils"
 	"net/http"
 )
 
