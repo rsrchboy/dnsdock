@@ -230,7 +230,7 @@ func overrideFromLabels(in *servers.Service, labels map[string]string) (out *ser
 		case "com.dnsdock.ignore":
 			return nil
 		case "com.dnsdock.alias":
-			in.Aliases = strings.Split(v, ",")
+			in.Aliases = append(in.Aliases, strings.Split(v, ",")...)
 		case "com.dnsdock.name":
 			in.Name = v
 		case "com.dnsdock.tags":
