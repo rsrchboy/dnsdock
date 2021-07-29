@@ -226,49 +226,34 @@ func cleanContainerName(name string) string {
 func overrideFromLabels(in *servers.Service, labels map[string]string) (out *servers.Service) {
 	var region string
 	for k, v := range labels {
-		if k == "com.dnsdock.ignore" {
+		switch k {
+		case "com.dnsdock.ignore":
 			return nil
-		}
-
-		if k == "com.dnsdock.alias" {
+		case "com.dnsdock.alias":
 			in.Aliases = strings.Split(v, ",")
-		}
-
-		if k == "com.dnsdock.name" {
+		case "com.dnsdock.name":
 			in.Name = v
-		}
-
-		if k == "com.dnsdock.tags" {
+		case "com.dnsdock.tags":
 			if len(v) == 0 {
 				in.Name = ""
 			} else {
 				in.Name = strings.Split(v, ",")[0]
 			}
-		}
-
-		if k == "com.dnsdock.image" {
+		case "com.dnsdock.image":
 			in.Image = v
-		}
-
-		if k == "com.dnsdock.ttl" {
+		case "com.dnsdock.ttl":
 			if ttl, err := strconv.Atoi(v); err == nil {
 				in.TTL = ttl
 			}
-		}
-
-		if k == "com.dnsdock.region" {
+		case "com.dnsdock.region":
 			region = v
-		}
-
-		if k == "com.dnsdock.ip_addr" {
+		case "com.dnsdock.ip_addr":
 			ipAddr := net.ParseIP(v)
 			if ipAddr != nil {
 				in.IPs = in.IPs[:0]
 				in.IPs = append(in.IPs, ipAddr)
 			}
-		}
-
-		if k == "com.dnsdock.prefix" {
+		case "com.dnsdock.prefix":
 			addrs := make([]net.IP, 0)
 			for _, value := range in.IPs {
 				if strings.HasPrefix(value.String(), v) {
