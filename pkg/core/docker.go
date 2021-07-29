@@ -128,7 +128,6 @@ func (d *DockerManager) getService(id string) (*servers.Service, error) {
 	}
 
 	service := servers.NewService()
-	service.Aliases = make([]string, 0)
 
 	service.Image = getImageName(desc.Config.Image)
 	if imageNameIsSHA(service.Image, desc.Image) {

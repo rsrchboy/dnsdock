@@ -12,8 +12,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/coreos/go-systemd/activation"
-	"github.com/rsrchboy/dnsdock/pkg/utils"
 	"github.com/miekg/dns"
+	"github.com/rsrchboy/dnsdock/pkg/utils"
 	"net"
 	"regexp"
 	"strings"
@@ -32,7 +32,10 @@ type Service struct {
 
 // NewService creates a new service
 func NewService() (s *Service) {
-	s = &Service{TTL: -1}
+	s = &Service{
+		Aliases: make([]string, 0),
+		TTL:     -1,
+	}
 	return
 }
 func (s Service) String() string {
