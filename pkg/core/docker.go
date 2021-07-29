@@ -129,12 +129,23 @@ func (d *DockerManager) getService(id string) (*servers.Service, error) {
 
 	service := servers.NewService()
 
-	service.Image = getImageName(desc.Config.Image)
-	if imageNameIsSHA(service.Image, desc.Image) {
-		logger.Warningf("Warning: Can't route %s, image %s is not a tag.", id[:10], service.Image)
-		service.Image = ""
+	if _, ok := desc.Config.Labels["com.docker.compose.service"]; ok {
+		service.IsCompose = true
 	}
-	service.Name = cleanContainerName(desc.Name)
+
+	if service.IsCompose {
+		// the compose way
+		service.Name = desc.Config.Labels["com.docker.compose.service"]
+		service.Image = desc.Config.Labels["com.docker.compose.project"]
+	} else {
+		// the original way
+		service.Image = getImageName(desc.Config.Image)
+		if imageNameIsSHA(service.Image, desc.Image) {
+			logger.Warningf("Warning: Can't route %s, image %s is not a tag.", id[:10], service.Image)
+			service.Image = ""
+		}
+		service.Name = cleanContainerName(desc.Name)
+	}
 
 	service = getIPAddresses(service, &desc)
 	service = overrideFromLabels(service, desc.Config.Labels)

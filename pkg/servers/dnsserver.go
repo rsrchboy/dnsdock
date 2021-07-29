@@ -23,18 +23,20 @@ import (
 
 // Service represents a container and an attached DNS record
 type Service struct {
-	Name    string
-	Image   string
-	IPs     []net.IP
-	TTL     int
-	Aliases []string
+	Name      string
+	Image     string
+	IPs       []net.IP
+	TTL       int
+	Aliases   []string
+	IsCompose bool
 }
 
 // NewService creates a new service
 func NewService() (s *Service) {
 	s = &Service{
-		Aliases: make([]string, 0),
-		TTL:     -1,
+		Aliases:   make([]string, 0),
+		TTL:       -1,
+		IsCompose: false,
 	}
 	return
 }
